@@ -1,3 +1,5 @@
+import NavBar from './NavBar';
+
 export const metadata = {
   title: 'MeBot',
   description: 'MeBot – AI creation and showcase platform',
@@ -14,6 +16,7 @@ export default function RootLayout({ children }) {
           color: '#f9fafb',
         }}
       >
+        <NavBar />
         {children}
       </body>
     </html>
