@@ -1,4 +1,9 @@
+'use client';
+import { useState } from 'react';
+
 export default function CreateBot() {
+  const [botName, setBotName] = useState('');
+
   return (
     <main style={{ padding: '60px' }}>
       <h1>Create Your Bot</h1>
@@ -8,6 +13,8 @@ export default function CreateBot() {
         <input
           type="text"
           placeholder="Bot Name"
+          value={botName}
+          onChange={(e) => setBotName(e.target.value)}
           style={{
             padding: '12px',
             width: '300px',
@@ -30,6 +37,7 @@ export default function CreateBot() {
           fontSize: '1rem',
           cursor: 'pointer'
         }}
+        onClick={() => alert(`Bot name saved: ${botName}`)}
       >
         Continue
       </button>
