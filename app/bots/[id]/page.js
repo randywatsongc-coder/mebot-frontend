@@ -1,31 +1,199 @@
-export default function BotProfile({ params }) {
-  const { id } = params;
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-  // Placeholder bot data (later we will load real data)
-  const bot = {
-    name: "Unnamed Bot",
-    avatar: "🤖",
-    personality: "Unknown",
+export default function CreateBot() {
+  const router = useRouter();
+
+  const [botName, setBotName] = useState('');
+  const [avatar, setAvatar] = useState('robot');
+  const [personality, setPersonality] = useState('');
+  const [customPersonality, setCustomPersonality] = useState('');
+
+  const handleContinue = () => {
+    const finalPersonality =
+      customPersonality.trim() !== '' ? customPersonality : personality;
+
+    // Generate a unique bot ID
+    const id = Date.now().toString();
+
+    // Save bot data locally (temporary database)
+    const botData = {
+      id,
+      name: botName,
+      avatar,
+      personality: finalPersonality,
+    };
+
+    localStorage.setItem(`bot-${id}`, JSON.stringify(botData));
+
+    // Redirect to the bot profile page
+    router.push(`/bots/${id}`);
   };
 
   return (
-    <main style={{ padding: "60px" }}>
-      <h1>Bot Profile</h1>
-      <p>This is the public page for your MeBot.</p>
+    <main style={{ padding: '60px' }}>
+      <h1>Create Your Bot</h1>
+      <p>Start building your AI-powered MeBot here.</p>
 
-      <div
-        style={{
-          marginTop: "40px",
-          padding: "30px",
-          background: "#0a0f24",
-          borderRadius: "12px",
-          width: "400px",
-        }}
-      >
-        <h2>{bot.avatar} {bot.name}</h2>
-        <p><strong>ID:</strong> {id}</p>
-        <p><strong>Personality:</strong> {bot.personality}</p>
+      {/* Bot Name */}
+      <div style={{ marginTop: '30px' }}>
+        <input
+          type="text"
+          placeholder="Bot Name"
+          value={botName}
+          onChange={(e) => setBotName(e.target.value)}
+          style={{
+            padding: '12px',
+            width: '300px',
+            borderRadius: '6px',
+            border: '1px solid #333',
+            background: '#0a0f24',
+            color: '#fff'
+          }}
+        />
       </div>
+
+      {/* Avatar Selection */}
+      <h3 style={{ marginTop: '40px' }}>Choose an Avatar</h3>
+
+      <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+        <button
+          onClick={() => setAvatar('robot')}
+          style={{
+            padding: '10px 20px',
+            background: avatar === 'robot' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          🤖 Robot
+        </button>
+
+        <button
+          onClick={() => setAvatar('alien')}
+          style={{
+            padding: '10px 20px',
+            background: avatar === 'alien' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          👽 Alien
+        </button>
+
+        <button
+          onClick={() => setAvatar('wizard')}
+          style={{
+            padding: '10px 20px',
+            background: avatar === 'wizard' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          🧙 Wizard
+        </button>
+      </div>
+
+      {/* Personality Selection */}
+      <h3 style={{ marginTop: '40px' }}>Choose a Personality</h3>
+
+      <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+        <button
+          onClick={() => {
+            setPersonality('friendly');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'friendly' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          😊 Friendly
+        </button>
+
+        <button
+          onClick={() => {
+            setPersonality('serious');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'serious' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          🧠 Serious
+        </button>
+
+        <button
+          onClick={() => {
+            setPersonality('funny');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'funny' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          😂 Funny
+        </button>
+      </div>
+
+      {/* Custom Personality */}
+      <div style={{ marginTop: '30px' }}>
+        <input
+          type="text"
+          placeholder="Or type your own personality..."
+          value={customPersonality}
+          onChange={(e) => {
+            setCustomPersonality(e.target.value);
+            setPersonality('');
+          }}
+          style={{
+            padding: '12px',
+            width: '400px',
+            borderRadius: '6px',
+            border: '1px solid #333',
+            background: '#0a0f24',
+            color: '#fff'
+          }}
+        />
+      </div>
+
+      {/* Continue Button */}
+      <button
+        style={{
+          marginTop: '40px',
+          padding: '14px 28px',
+          background: '#6366f1',
+          border: 'none',
+          borderRadius: '8px',
+          color: '#fff',
+          fontSize: '1rem',
+          cursor: 'pointer'
+        }}
+        onClick={handleContinue}
+      >
+        Continue
+      </button>
     </main>
   );
 }
