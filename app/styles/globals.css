@@ -1,0 +1,19 @@
+/* Global styles for MeBot */
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #050816;
+  color: #f9fafb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
