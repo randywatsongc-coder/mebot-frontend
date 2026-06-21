@@ -4,6 +4,8 @@ import { useState } from 'react';
 export default function CreateBot() {
   const [botName, setBotName] = useState('');
   const [avatar, setAvatar] = useState('robot');
+  const [personality, setPersonality] = useState('');
+  const [customPersonality, setCustomPersonality] = useState('');
 
   return (
     <main style={{ padding: '60px' }}>
@@ -75,6 +77,83 @@ export default function CreateBot() {
         </button>
       </div>
 
+      {/* Personality Selection */}
+      <h3 style={{ marginTop: '40px' }}>Choose a Personality</h3>
+
+      <div style={{ display: 'flex', gap: '20px', marginTop: '10px' }}>
+        <button
+          onClick={() => {
+            setPersonality('friendly');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'friendly' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          😊 Friendly
+        </button>
+
+        <button
+          onClick={() => {
+            setPersonality('serious');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'serious' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          🧠 Serious
+        </button>
+
+        <button
+          onClick={() => {
+            setPersonality('funny');
+            setCustomPersonality('');
+          }}
+          style={{
+            padding: '10px 20px',
+            background: personality === 'funny' ? '#6366f1' : '#1f2937',
+            border: 'none',
+            borderRadius: '6px',
+            color: '#fff',
+            cursor: 'pointer'
+          }}
+        >
+          😂 Funny
+        </button>
+      </div>
+
+      {/* Custom Personality */}
+      <div style={{ marginTop: '30px' }}>
+        <input
+          type="text"
+          placeholder="Or type your own personality..."
+          value={customPersonality}
+          onChange={(e) => {
+            setCustomPersonality(e.target.value);
+            setPersonality('');
+          }}
+          style={{
+            padding: '12px',
+            width: '400px',
+            borderRadius: '6px',
+            border: '1px solid #333',
+            background: '#0a0f24',
+            color: '#fff'
+          }}
+        />
+      </div>
+
       {/* Continue Button */}
       <button
         style={{
@@ -87,7 +166,14 @@ export default function CreateBot() {
           fontSize: '1rem',
           cursor: 'pointer'
         }}
-        onClick={() => alert(`Bot Name: ${botName}\nAvatar: ${avatar}`)}
+        onClick={() => {
+          const finalPersonality =
+            customPersonality.trim() !== '' ? customPersonality : personality;
+
+          alert(
+            `Bot Name: ${botName}\nAvatar: ${avatar}\nPersonality: ${finalPersonality}`
+          );
+        }}
       >
         Continue
       </button>
