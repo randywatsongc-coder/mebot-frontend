@@ -1,9 +1,11 @@
 'use client';
 
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function BotProfile({ params }) {
-  const { id } = params;
+export default function BotProfile() {
+  const { id } = useParams();
+  const router = useRouter();
   const [bot, setBot] = useState(null);
 
   useEffect(() => {
@@ -39,6 +41,22 @@ export default function BotProfile({ params }) {
         <h2>{bot.avatar} {bot.name}</h2>
         <p><strong>ID:</strong> {bot.id}</p>
         <p><strong>Personality:</strong> {bot.personality}</p>
+
+        <button
+          onClick={() => router.push(`/bots/${id}/chat`)}
+          style={{
+            marginTop: "20px",
+            padding: "12px 24px",
+            background: "#6366f1",
+            color: "#fff",
+            borderRadius: "8px",
+            border: "none",
+            fontSize: "18px",
+            cursor: "pointer"
+          }}
+        >
+          Chat with {bot.name}
+        </button>
       </div>
     </main>
   );
