@@ -1,62 +1,75 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function BotList() {
   const [bots, setBots] = useState([]);
 
   useEffect(() => {
-    const allBots = [];
-
+    const storedBots = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-
       if (key.startsWith('bot-')) {
         const bot = JSON.parse(localStorage.getItem(key));
-        allBots.push(bot);
+        storedBots.push(bot);
       }
     }
-
-    setBots(allBots);
+    setBots(storedBots);
   }, []);
 
   return (
-    <main style={{ padding: '60px' }}>
-      <h1>Your Bots</h1>
-      <p>All MeBots you’ve created.</p>
+    <main style={{ padding: '40px' }}>
+      <h1 style={{ fontSize: '36px', marginBottom: '20px' }}>
+        Your MeBots
+      </h1>
 
-      <div style={{ marginTop: '40px' }}>
-        {bots.length === 0 && <p>You haven’t created any bots yet.</p>}
+      {bots.length === 0 && (
+        <p>You haven't created any bots yet.</p>
+      )}
 
-        {bots.map((bot) => (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {bots.map(bot => (
           <div
             key={bot.id}
             style={{
-              marginBottom: '20px',
               padding: '20px',
-              background: '#0a0f24',
-              borderRadius: '10px',
-              width: '400px'
+              border: '1px solid #ccc',
+              borderRadius: '10px'
             }}
           >
-            <h2>{bot.avatar} {bot.name}</h2>
-            <p><strong>Personality:</strong> {bot.personality}</p>
+            <h2 style={{ marginBottom: '10px' }}>{bot.name}</h2>
+            <p style={{ marginBottom: '20px' }}>
+              Personality: {bot.personality}
+            </p>
 
-            <Link
-              href={`/bots/${bot.id}`}
-              style={{
-                marginTop: '10px',
-                display: 'inline-block',
-                padding: '10px 20px',
-                background: '#6366f1',
-                color: '#fff',
-                borderRadius: '6px',
-                textDecoration: 'none'
-              }}
-            >
-              View Bot
-            </Link>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <Link
+                href={`/bots/${bot.id}`}
+                style={{
+                  padding: '10px 20px',
+                  background: '#6366f1',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  textDecoration: 'none'
+                }}
+              >
+                View
+              </Link>
+
+              <Link
+                href={`/bots/${bot.id}/chat`}
+                style={{
+                  padding: '10px 20px',
+                  background: '#10b981',
+                  color: '#fff',
+                  borderRadius: '6px',
+                  textDecoration: 'none'
+                }}
+              >
+                Chat
+              </Link>
+            </div>
           </div>
         ))}
       </div>
