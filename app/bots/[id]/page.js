@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AvatarRenderer from '@/app/components/AvatarRenderer';
 
 export default function BotProfile() {
   const { id } = useParams();
@@ -29,9 +30,13 @@ export default function BotProfile() {
       <h1>Bot Profile</h1>
       <p>This is the public page for your MeBot.</p>
 
+      {/* ⭐ GEN‑6# Avatar Renderer */}
+      <div style={{ marginTop: "40px", marginBottom: "40px" }}>
+        <AvatarRenderer mode="full" emotion="idle" />
+      </div>
+
       <div
         style={{
-          marginTop: "40px",
           padding: "30px",
           background: "#0a0f24",
           borderRadius: "12px",
