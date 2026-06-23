@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Gen6Robot from '@/app/components/Gen6Robot';
 
 export default function BotChat() {
   const { id } = useParams();
   const [bot, setBot] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [emotion, setEmotion] = useState('Idle');
 
   // Load bot data
   useEffect(() => {
@@ -29,6 +31,9 @@ export default function BotChat() {
 
   const sendMessage = () => {
     if (!input.trim()) return;
+
+    // User sends message → robot goes into THINKING
+    setEmotion('Thinking');
 
     const newMessages = [
       ...messages,
@@ -73,10 +78,17 @@ export default function BotChat() {
       const pool = responses[personality] || responses.Friendly;
       const reply = pool[Math.floor(Math.random() * pool.length)];
 
+      // Robot is TALKING
+      setEmotion('Talking');
+
       setMessages(prev => [
         ...prev,
         { sender: 'bot', text: reply }
       ]);
+
+      // After talking → back to IDLE
+      setTimeout(() => setEmotion('Idle'), 800);
+
     }, 600);
   };
 
@@ -158,7 +170,7 @@ export default function BotChat() {
           color: '#fff'
         }}
       >
-        <p>GEN‑6 Robot Panel<br/>Animation Coming Soon</p>
+        <Gen6Robot bot={bot} emotion={emotion} />
       </div>
 
     </main>
