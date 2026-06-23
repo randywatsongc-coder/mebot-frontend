@@ -1,10 +1,20 @@
 "use client";
+
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 
 export default function AvatarRenderer({ mode = "full", emotion = "idle" }) {
   return (
-    <div className={`w-full ${mode === "full" ? "h-[500px]" : "h-[300px]"}`}>
+    <div
+      style={{
+        width: "100%",
+        height: mode === "full" ? "500px" : "300px",
+        background: "#0a0f24",
+        borderRadius: "12px",
+        overflow: "hidden",
+        marginBottom: "20px"
+      }}
+    >
       <Canvas camera={{ position: [0, 1.5, 3] }}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
