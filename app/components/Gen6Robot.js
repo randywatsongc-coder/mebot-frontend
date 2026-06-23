@@ -5,40 +5,38 @@ export default function Gen6Robot({ bot, emotion }) {
     <div
       style={{
         width: '100%',
-        height: '100%',
         background: '#0d0d0d',
         borderRadius: '12px',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#fff',
         flexDirection: 'column',
-        padding: '20px'
+        alignItems: 'center',
+        padding: '20px',
+        color: '#fff'
       }}
     >
+      {/* GEN‑6# Info Panel */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h2 style={{ margin: 0 }}>{bot?.name}</h2>
+        <p style={{ margin: '6px 0', fontSize: '14px', opacity: 0.7 }}>
+          {bot?.personality} • {emotion}
+        </p>
+      </div>
+
+      {/* Placeholder for future emotion indicators */}
       <div
         style={{
-          width: '180px',
-          height: '260px',
+          width: '100%',
+          height: '60px',
           background: '#1a1a1a',
-          borderRadius: '12px',
-          marginBottom: '20px',
+          borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '14px',
-          opacity: 0.8
+          opacity: 0.6,
+          fontSize: '13px'
         }}
       >
-        {/* Avatar placeholder */}
-        GEN‑6 Avatar
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <h3 style={{ margin: 0 }}>{bot?.name}</h3>
-        <p style={{ margin: '4px 0', fontSize: '14px', opacity: 0.7 }}>
-          {bot?.personality} • {emotion}
-        </p>
+        GEN‑6# Status Panel
       </div>
     </div>
   );
