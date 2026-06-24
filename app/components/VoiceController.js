@@ -3,63 +3,81 @@
 import { useState, useEffect, useRef } from "react";
 
 export default function VoiceController({ onCommand }) {
-  const recognitionRef = useRef(null);
   const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
-    if (!("webkitSpeechRecognition" in window)) {
-      console.warn("Speech recognition not supported");
+    // Browser speech recognition
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn("Speech Recognition not supported in this browser.");
       return;
     }
 
-    const SpeechRecognition = window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const recog = new SpeechRecognition();
+    recog.continuous = false;
+    recog.interimResults = false;
+    recog.lang = "en-US";
 
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
+    recog.onstart = () => setListening(true);
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
+    recog.onend = () => setListening(false);
 
-      if (transcript.includes("closer")) onCommand("move-forward");
-      else if (transcript.includes("back")) onCommand("move-back");
-      else if (transcript.includes("left")) onCommand("turn-left");
-      else if (transcript.includes("right")) onCommand("turn-right");
-      else if (transcript.includes("face")) onCommand("camera-face");
-      else if (transcript.includes("full")) onCommand("camera-full");
-      else if (transcript.includes("dance")) onCommand("dance");
-      else onCommand("idle");
+    recog.onerror = (e) => {
+      console.error("Voice error:", e);
+      setListening(false);
     };
 
-    recognition.onend = () => setListening(false);
+    recog.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      onCommand(transcript);
+    };
 
-    recognitionRef.current = recognition;
+    recognitionRef.current = recog;
   }, [onCommand]);
 
-  const startListening = () => {
-    if (recognitionRef.current) {
-      setListening(true);
-      recognitionRef.current.start();
-    }
+  const toggle = () => {
+    if (!recognitionRef.current) return;
+
+    if (!listening) recognitionRef.current.start();
+    else recognitionRef.current.stop();
   };
 
   return (
-    <div style={{ marginTop: "20px" }}>
+    <div
+      style={{
+        background: "#0f172a",
+        padding: "20px",
+        borderRadius: "12px",
+        marginBottom: "20px",
+        color: "#fff",
+      }}
+    >
+      <h3>Voice Control</h3>
+
       <button
-        onClick={startListening}
+        onClick={toggle}
         style={{
           padding: "12px 20px",
-          background: listening ? "#22c55e" : "#6366f1",
+          background: listening ? "#ef4444" : "#22c55e",
           color: "#fff",
-          borderRadius: "8px",
           border: "none",
+          borderRadius: "8px",
           cursor: "pointer",
           fontSize: "16px",
+          marginTop: "10px",
         }}
       >
-        {listening ? "Listening..." : "🎤 Voice Command"}
+        {listening ? "🎙 Stop Listening" : "🎤 Start Voice Command"}
       </button>
+
+      {!recognitionRef.current && (
+        <p style={{ marginTop: "10px", color: "#f87171" }}>
+          Voice recognition not supported in this browser.
+        </p>
+      )}
     </div>
   );
 }
