@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import AvatarRenderer from "@/app/components/AvatarRenderer";
 
 export default function BotProfilePage() {
   const { id } = useParams();
@@ -29,22 +30,46 @@ export default function BotProfilePage() {
     <main
       style={{
         padding: "60px",
-        maxWidth: "700px",
+        maxWidth: "900px",
         margin: "0 auto",
         color: "#fff",
       }}
     >
-      <h1>
+      <h1 style={{ fontSize: "36px", marginBottom: "10px" }}>
         {bot.avatar} {bot.name}
       </h1>
 
-      <p style={{ opacity: 0.7, marginTop: "10px" }}>
+      <p style={{ opacity: 0.7, marginTop: "5px", fontSize: "18px" }}>
         Personality: <strong>{bot.personality}</strong>
       </p>
 
+      {/* 3D Avatar Preview */}
       <div
         style={{
-          marginTop: "30px",
+          marginTop: "40px",
+          background: "#0a0f24",
+          borderRadius: "12px",
+          padding: "20px",
+        }}
+      >
+        <h2 style={{ marginBottom: "20px" }}>3D Avatar Preview</h2>
+
+        <div
+          style={{
+            height: "350px",
+            borderRadius: "12px",
+            overflow: "hidden",
+            background: "#000",
+          }}
+        >
+          <AvatarRenderer mode="full" emotion="idle" action="idle" />
+        </div>
+      </div>
+
+      {/* Bot Stats */}
+      <div
+        style={{
+          marginTop: "40px",
           padding: "20px",
           background: "#0f172a",
           borderRadius: "12px",
@@ -56,6 +81,7 @@ export default function BotProfilePage() {
         <p style={{ opacity: 0.7 }}>Focus: 100% (placeholder)</p>
       </div>
 
+      {/* Buttons */}
       <div style={{ marginTop: "40px" }}>
         <button
           onClick={() => router.push(`/bots/${id}/chat`)}
@@ -87,7 +113,7 @@ export default function BotProfilePage() {
             width: "100%",
           }}
         >
-          Open 3D Avatar
+          Open Full 3D Avatar
         </button>
       </div>
 
