@@ -17,7 +17,9 @@ export default function BotProfile() {
   const [gesture, setGesture] = useState("none");
   const [speakText, setSpeakText] = useState("");
 
-  // ⭐ NEW: short‑term memory (last 5 user commands)
+  // ⭐ NEW: long‑term mood
+  const [mood, setMood] = useState("neutral"); // positive | neutral | negative
+
   const [memory, setMemory] = useState([]);
 
   const [status, setStatus] = useState({
@@ -26,11 +28,12 @@ export default function BotProfile() {
     lastGesture: "none",
     lastVoice: "none",
     lastTextCmd: "none",
-    lastSpeech: "none"
+    lastSpeech: "none",
+    mood: "neutral"
   });
 
-  const personalityLine = (emotion, personality) => {
-    const lines = {
+  const personalityLine = (emotion, personality, mood) => {
+    const base = {
       idle: ["Just hanging out.", "Ready when you are.", "I'm here."],
       happy: ["Feeling great!", "Love the energy!", "This is fun!"],
       thinking: ["Let me think...", "Processing...", "Analyzing..."],
@@ -38,22 +41,38 @@ export default function BotProfile() {
       focused: ["Locked in.", "Staying sharp.", "I'm on it."]
     };
 
-    const pool = lines[emotion] || lines.idle;
-    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const moodBoost = {
+      positive: ["I'm feeling good today.", "Vibes are high.", "Everything feels smooth."],
+      neutral: ["All normal here.", "Just doing my thing.", "Keeping steady."],
+      negative: ["Feeling a bit off.", "Not my best moment.", "Trying to stay focused."]
+    };
 
-    return personality === "fun"
-      ? pick + " 😄"
-      : personality === "serious"
-      ? pick + "."
-      : pick;
+    const pool = base[emotion] || base.idle;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const moodPick = moodBoost[mood][Math.floor(Math.random() * moodBoost[mood].length)];
+
+    let line = pick + " " + moodPick;
+
+    if (personality === "fun") line += " 😄";
+    if (personality === "serious") line += ".";
+
+    return line;
   };
 
-  // ⭐ Push to memory (max 5)
   const remember = (msg) => {
     setMemory((prev) => {
       const updated = [msg, ...prev];
       return updated.slice(0, 5);
     });
+
+    // ⭐ Mood shifts based on user engagement
+    if (msg.includes("hi") || msg.includes("hello")) {
+      setMood("positive");
+    } else if (msg.includes("stop") || msg.includes("no")) {
+      setMood("negative");
+    } else {
+      setMood("neutral");
+    }
   };
 
   useEffect(() => {
@@ -65,11 +84,13 @@ export default function BotProfile() {
       const intro = `Hello, I am ${parsed.name}. I am a ${parsed.personality} style MeBot.`;
       setSpeakText(intro);
       setEmotion("happy");
+      setMood("positive");
 
       setStatus((s) => ({
         ...s,
         lastSpeech: intro,
-        lastEmotion: "happy"
+        lastEmotion: "happy",
+        mood: "positive"
       }));
     }
   }, [id]);
@@ -90,8 +111,8 @@ export default function BotProfile() {
     else { emo = "idle"; speech = ""; }
 
     const flavored = speech
-      ? speech + " " + personalityLine(emo, bot.personality)
-      : personalityLine(emo, bot.personality);
+      ? speech + " " + personalityLine(emo, bot.personality, mood)
+      : personalityLine(emo, bot.personality, mood);
 
     setSpeakText(flavored);
     setEmotion(emo);
@@ -100,11 +121,11 @@ export default function BotProfile() {
       ...s,
       lastAction: action,
       lastEmotion: emo,
-      lastSpeech: flavored
+      lastSpeech: flavored,
+      mood
     }));
-  }, [action, bot]);
+  }, [action, bot, mood]);
 
-  // ⭐ Gesture handler
   const triggerGesture = (g) => {
     setGesture(g);
 
@@ -117,7 +138,7 @@ export default function BotProfile() {
     if (g === "thumbs-up") line = "Thumbs up!";
     if (g === "salute") line = "Saluting.";
 
-    const flavored = line + " " + personalityLine(emo, bot.personality);
+    const flavored = line + " " + personalityLine(emo, bot.personality, mood);
 
     setEmotion(emo);
     setSpeakText(flavored);
@@ -126,130 +147,9 @@ export default function BotProfile() {
       ...s,
       lastGesture: g,
       lastEmotion: emo,
-      lastSpeech: flavored
+      lastSpeech: flavored,
+      mood
     }));
   };
 
-  // ⭐ Idle loop
   useEffect(() => {
-    if (!bot) return;
-
-    const loop = setInterval(() => {
-      const idleEmotions = ["idle", "happy", "thinking"];
-      const emo = idleEmotions[Math.floor(Math.random() * idleEmotions.length)];
-
-      const line = personalityLine(emo, bot.personality);
-
-      setEmotion(emo);
-      setSpeakText(line);
-
-      setStatus((s) => ({
-        ...s,
-        lastEmotion: emo,
-        lastSpeech: line
-      }));
-    }, 10000 + Math.random() * 10000);
-
-    return () => clearInterval(loop);
-  }, [bot]);
-
-  // ⭐ Text command
-  const handleTextCmd = (cmd) => {
-    remember(cmd);
-    setAction(cmd);
-    setStatus((s) => ({ ...s, lastTextCmd: cmd }));
-  };
-
-  // ⭐ Voice command
-  const handleVoiceCmd = (cmd) => {
-    remember(cmd);
-    setAction(cmd);
-    setStatus((s) => ({ ...s, lastVoice: cmd }));
-  };
-
-  if (!bot) {
-    return (
-      <main style={{ padding: "60px" }}>
-        <h1>Bot Not Found</h1>
-        <p>No bot exists with ID: {id}</p>
-      </main>
-    );
-  }
-
-  return (
-    <main style={{ padding: "60px" }}>
-      <h1>Bot Profile</h1>
-
-      <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-        <AvatarRenderer
-          mode="full"
-          emotion={emotion}
-          action={action}
-          gesture={gesture}
-        />
-      </div>
-
-      <AvatarController onChange={handleTextCmd} />
-      <VoiceController onCommand={handleVoiceCmd} />
-      <BotSpeaker text={speakText} />
-
-      {/* ⭐ Gesture Buttons */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={() => triggerGesture("wave")} style={btn}>👋 Wave</button>
-        <button onClick={() => triggerGesture("nod")} style={btn}>👍 Nod</button>
-        <button onClick={() => triggerGesture("point")} style={btn}>👉 Point</button>
-        <button onClick={() => triggerGesture("thumbs-up")} style={btn}>👍 Thumbs Up</button>
-        <button onClick={() => triggerGesture("salute")} style={btn}>🫡 Salute</button>
-      </div>
-
-      {/* ⭐ Memory Panel */}
-      <div
-        style={{
-          marginTop: "20px",
-          padding: "20px",
-          background: "#1f2937",
-          borderRadius: "12px",
-          width: "420px",
-          color: "#fff"
-        }}
-      >
-        <h3>Recent User Commands</h3>
-        {memory.length === 0 && <p>No memory yet.</p>}
-        {memory.map((m, i) => (
-          <p key={i}>• {m}</p>
-        ))}
-      </div>
-
-      {/* Status Panel */}
-      <div
-        style={{
-          marginTop: "20px",
-          padding: "20px",
-          background: "#111827",
-          borderRadius: "12px",
-          width: "420px",
-          color: "#fff"
-        }}
-      >
-        <h3>Live Bot Status</h3>
-        <p><strong>Last Action:</strong> {status.lastAction}</p>
-        <p><strong>Last Emotion:</strong> {status.lastEmotion}</p>
-        <p><strong>Last Gesture:</strong> {status.lastGesture}</p>
-        <p><strong>Last Voice Command:</strong> {status.lastVoice}</p>
-        <p><strong>Last Text Command:</strong> {status.lastTextCmd}</p>
-        <p><strong>Last Spoken Output:</strong> {status.lastSpeech}</p>
-      </div>
-    </main>
-  );
-}
-
-const btn = {
-  padding: "10px 16px",
-  marginRight: "10px",
-  background: "#1e293b",
-  color: "#fff",
-  border: "none",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontSize: "16px"
-};
