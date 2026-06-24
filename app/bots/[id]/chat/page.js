@@ -43,6 +43,33 @@ export default function BotChatPage() {
     return "idle";
   };
 
+  // STEP 2 — AUTO‑GESTURE DETECTION
+  const detectGesture = (text) => {
+    const t = text.toLowerCase();
+
+    // Agreement → nod
+    if (["yes", "yeah", "yup", "true", "exactly", "right"].some((w) => t.includes(w))) {
+      return { type: "gesture", value: "nod" };
+    }
+
+    // Disagreement → shake
+    if (["no", "nah", "nope", "not really", "i disagree"].some((w) => t.includes(w))) {
+      return { type: "gesture", value: "shake" };
+    }
+
+    // Greetings → wave
+    if (["hi", "hello", "hey", "yo"].some((w) => t.includes(w))) {
+      return { type: "wave" };
+    }
+
+    // Curiosity → lean
+    if (["why", "how", "explain", "tell me more", "what do you think"].some((w) => t.includes(w))) {
+      return { type: "gesture", value: "lean" };
+    }
+
+    return null;
+  };
+
   const handleVoiceCommand = (text) => {
     if (!text.trim()) return;
 
@@ -70,11 +97,13 @@ export default function BotChatPage() {
     const lower = msg.toLowerCase();
     let reply = "";
 
-    // STEP 1 — AUTO‑EMOTION DETECTION
+    // STEP 1 — AUTO‑EMOTION
     const detectedEmotion = detectEmotion(msg);
-
-    // Emit emotion to avatar
     emitAvatarEvent({ type: "emotion", value: detectedEmotion });
+
+    // STEP 2 — AUTO‑GESTURES
+    const gesture = detectGesture(msg);
+    if (gesture) emitAvatarEvent(gesture);
 
     // Personality emojis
     const personality = {
@@ -86,14 +115,9 @@ export default function BotChatPage() {
 
     const p = personality[bot.personality] || ["🙂"];
 
-    // Special commands
-    if (lower.includes("hi") || lower.includes("hello")) {
-      emitAvatarEvent({ type: "wave" });
-      reply = `${p[0]} Hey! I'm ${bot.name}. What’s up?`;
-    } else if (lower.includes("who are you")) {
-      reply = `${p[1]} I'm ${bot.name}, your ${bot.personality} MeBot.`;
-    } else if (lower.includes("help")) {
-      reply = `${p[2]} I can move, dance, change scenes, show emotions, and chat with personality.`;
+    // Commands
+    if (lower.includes("help")) {
+      reply = `${p[2]} I can move, dance, change scenes, show emotions, and react to your messages.`;
     } else if (lower.includes("dance")) {
       emitAvatarEvent({ type: "dance" });
       reply = `${p[3]} Dancing now! 💃🕺`;
@@ -101,30 +125,21 @@ export default function BotChatPage() {
       emitAvatarEvent({ type: "scene", value: "neon" });
       reply = `${p[0]} Switching scenes!`;
     } else if (lower.includes("joke")) {
-      reply = `${p[1]} Here's one: Why did the robot go to therapy? Because it had too many *bytes* of emotional baggage.`;
+      reply = `${p[1]} Why did the robot go to therapy? Too many bytes of emotional baggage.`;
     } else if (lower.includes("remember")) {
-      reply = `${p[2]} I remember everything you say. So far you told me: "${memory.join(", ")}"`;
+      reply = `${p[2]} You told me: "${memory.join(", ")}"`;
     }
 
-    // Auto‑emotion replies
-    else if (detectedEmotion === "happy") {
-      reply = `${p[0]} I love that energy!`;
-    } else if (detectedEmotion === "sad") {
-      reply = `${p[3]} I'm here for you. Want to talk about it?`;
-    } else if (detectedEmotion === "angry") {
-      reply = `${p[2]} I feel that fire… want to vent?`;
-    } else if (detectedEmotion === "thinking") {
-      reply = `${p[1]} Hmm… let's think this through.`;
-    } else if (detectedEmotion === "excited") {
-      reply = `${p[0]} LET’S GOOOOO!`;
-    } else if (detectedEmotion === "worried") {
-      reply = `${p[3]} It’s okay. I’m right here.`;
-    }
+    // Emotion‑based replies
+    else if (detectedEmotion === "happy") reply = `${p[0]} Love that energy!`;
+    else if (detectedEmotion === "sad") reply = `${p[3]} I'm here for you.`;
+    else if (detectedEmotion === "angry") reply = `${p[2]} I feel that fire.`;
+    else if (detectedEmotion === "thinking") reply = `${p[1]} Hmm… thinking.`;
+    else if (detectedEmotion === "excited") reply = `${p[0]} LET’S GO!`;
+    else if (detectedEmotion === "worried") reply = `${p[3]} It’s okay. I’m here.`;
 
     // Default
-    else {
-      reply = `${p[1]} You said: "${msg}". Interesting… tell me more.`;
-    }
+    else reply = `${p[1]} You said: "${msg}". Tell me more.`;
 
     return { from: "bot", text: reply };
   };
