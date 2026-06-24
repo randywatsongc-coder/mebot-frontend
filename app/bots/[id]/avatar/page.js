@@ -32,25 +32,29 @@ export default function AvatarPage() {
       style={{
         padding: "40px",
         color: "#fff",
-        maxWidth: "900px",
+        maxWidth: "1000px",
         margin: "0 auto",
       }}
     >
-      <h1>
+      <h1 style={{ fontSize: "32px", marginBottom: "20px" }}>
         {bot.avatar} {bot.name} — 3D Avatar
       </h1>
 
+      {/* 3D Avatar Window */}
       <div
         style={{
-          marginTop: "30px",
-          background: "#0f172a",
+          marginTop: "20px",
+          background: "#000",
           borderRadius: "12px",
-          padding: "20px",
+          padding: "0",
+          height: "500px",
+          overflow: "hidden",
         }}
       >
-        <AvatarRenderer bot={bot} />
+        <AvatarRenderer bot={bot} mode="full" />
       </div>
 
+      {/* Avatar Controls */}
       <div style={{ marginTop: "30px" }}>
         <AvatarController bot={bot} />
       </div>
