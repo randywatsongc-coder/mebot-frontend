@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import BotSpeaker from "@/app/components/BotSpeaker";
 import AvatarChatController from "@/app/components/AvatarChatController";
 import VoiceController from "@/app/components/VoiceController";
+import { emitAvatarEvent } from "@/app/events/avatarEvents";
 
 export default function BotChatPage() {
   const { id } = useParams();
@@ -21,6 +22,26 @@ export default function BotChatPage() {
       setBot(JSON.parse(saved));
     }
   }, [id]);
+
+  // STEP 1 — AUTO‑EMOTION DETECTION
+  const detectEmotion = (text) => {
+    const t = text.toLowerCase();
+
+    const emotionMap = [
+      { emo: "happy", words: ["love", "great", "awesome", "nice", "good", "yay", "excited"] },
+      { emo: "sad", words: ["sad", "down", "depressed", "upset", "hurt"] },
+      { emo: "angry", words: ["angry", "mad", "furious", "pissed"] },
+      { emo: "thinking", words: ["hmm", "thinking", "maybe", "idk"] },
+      { emo: "excited", words: ["let’s go", "hype", "omg", "woo", "fire"] },
+      { emo: "worried", words: ["worried", "scared", "anxious", "nervous"] },
+    ];
+
+    for (const group of emotionMap) {
+      if (group.words.some((w) => t.includes(w))) return group.emo;
+    }
+
+    return "idle";
+  };
 
   const handleVoiceCommand = (text) => {
     if (!text.trim()) return;
@@ -49,41 +70,59 @@ export default function BotChatPage() {
     const lower = msg.toLowerCase();
     let reply = "";
 
+    // STEP 1 — AUTO‑EMOTION DETECTION
+    const detectedEmotion = detectEmotion(msg);
+
+    // Emit emotion to avatar
+    emitAvatarEvent({ type: "emotion", value: detectedEmotion });
+
+    // Personality emojis
     const personality = {
       fun: ["😄", "🎉", "🔥", "😎"],
       serious: ["...", ".", "Indeed.", "Understood."],
       chaotic: ["💥", "⚡", "👀", "BROOOO"],
-      calm: ["✨", "🌿", "🕊️", "softly..."]
+      calm: ["✨", "🌿", "🕊️", "softly..."],
     };
 
     const p = personality[bot.personality] || ["🙂"];
 
-    const positiveWords = ["good", "great", "love", "awesome", "nice"];
-    const negativeWords = ["bad", "sad", "angry", "upset", "hate"];
-
-    let mood = "neutral";
-    if (positiveWords.some((w) => lower.includes(w))) mood = "happy";
-    if (negativeWords.some((w) => lower.includes(w))) mood = "sad";
-
+    // Special commands
     if (lower.includes("hi") || lower.includes("hello")) {
+      emitAvatarEvent({ type: "wave" });
       reply = `${p[0]} Hey! I'm ${bot.name}. What’s up?`;
     } else if (lower.includes("who are you")) {
       reply = `${p[1]} I'm ${bot.name}, your ${bot.personality} MeBot.`;
     } else if (lower.includes("help")) {
       reply = `${p[2]} I can move, dance, change scenes, show emotions, and chat with personality.`;
     } else if (lower.includes("dance")) {
+      emitAvatarEvent({ type: "dance" });
       reply = `${p[3]} Dancing now! 💃🕺`;
     } else if (lower.includes("scene")) {
+      emitAvatarEvent({ type: "scene", value: "neon" });
       reply = `${p[0]} Switching scenes!`;
     } else if (lower.includes("joke")) {
       reply = `${p[1]} Here's one: Why did the robot go to therapy? Because it had too many *bytes* of emotional baggage.`;
     } else if (lower.includes("remember")) {
       reply = `${p[2]} I remember everything you say. So far you told me: "${memory.join(", ")}"`;
-    } else if (mood === "happy") {
-      reply = `${p[0]} I love that energy! Tell me more.`;
-    } else if (mood === "sad") {
+    }
+
+    // Auto‑emotion replies
+    else if (detectedEmotion === "happy") {
+      reply = `${p[0]} I love that energy!`;
+    } else if (detectedEmotion === "sad") {
       reply = `${p[3]} I'm here for you. Want to talk about it?`;
-    } else {
+    } else if (detectedEmotion === "angry") {
+      reply = `${p[2]} I feel that fire… want to vent?`;
+    } else if (detectedEmotion === "thinking") {
+      reply = `${p[1]} Hmm… let's think this through.`;
+    } else if (detectedEmotion === "excited") {
+      reply = `${p[0]} LET’S GOOOOO!`;
+    } else if (detectedEmotion === "worried") {
+      reply = `${p[3]} It’s okay. I’m right here.`;
+    }
+
+    // Default
+    else {
       reply = `${p[1]} You said: "${msg}". Interesting… tell me more.`;
     }
 
