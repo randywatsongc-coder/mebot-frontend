@@ -43,25 +43,13 @@ export default function BotChatPage() {
     const t = text.toLowerCase();
     const updated = { ...memory };
 
-    if (t.includes("i like") || t.includes("my favorite")) {
-      updated.preferences.push(text);
-    }
-
-    if (t.includes("i hate") || t.includes("i don't like")) {
-      updated.dislikes.push(text);
-    }
-
-    if (t.includes("my goal") || t.includes("i want to")) {
-      updated.goals.push(text);
-    }
-
-    if (t.includes("i am") || t.includes("i live") || t.includes("i work")) {
-      updated.facts.push(text);
-    }
+    if (t.includes("i like") || t.includes("my favorite")) updated.preferences.push(text);
+    if (t.includes("i hate") || t.includes("i don't like")) updated.dislikes.push(text);
+    if (t.includes("my goal") || t.includes("i want to")) updated.goals.push(text);
+    if (t.includes("i am") || t.includes("i live") || t.includes("i work")) updated.facts.push(text);
 
     updated.misc.push(text);
 
-    // Keep memory clean
     Object.keys(updated).forEach((key) => {
       updated[key] = updated[key].slice(-20);
     });
@@ -150,6 +138,31 @@ export default function BotChatPage() {
     return null;
   };
 
+  // ⭐ STEP 7 — SCENE INTELLIGENCE
+  const detectScene = (text, emotion) => {
+    const t = text.toLowerCase();
+
+    // Explicit user command overrides everything
+    if (t.includes("scene")) return "neon";
+    if (t.includes("dark mode")) return "dark";
+    if (t.includes("studio")) return "studio";
+    if (t.includes("room")) return "room";
+
+    // Emotion‑based scenes
+    if (emotion === "happy") return "studio";
+    if (emotion === "excited") return "neon";
+    if (emotion === "angry") return "dark";
+    if (emotion === "sad") return "room";
+    if (emotion === "worried") return "room";
+    if (emotion === "thinking") return "studio";
+
+    // Context‑based scenes
+    if (t.includes("party") || t.includes("hype")) return "neon";
+    if (t.includes("chill") || t.includes("relax")) return "room";
+
+    return null;
+  };
+
   const handleVoiceCommand = (text) => {
     if (!text.trim()) return;
 
@@ -195,6 +208,10 @@ export default function BotChatPage() {
     const movement = detectMovement(msg);
     if (movement) emitAvatarEvent(movement);
 
+    // ⭐ STEP 7 — SCENE INTELLIGENCE
+    const scene = detectScene(msg, detectedEmotion);
+    if (scene) emitAvatarEvent({ type: "scene", value: scene });
+
     // STEP 4 — LIP‑SYNC START
     emitAvatarEvent({ type: "speak-start" });
 
@@ -212,7 +229,8 @@ export default function BotChatPage() {
     const mem = memory;
 
     if (lower.includes("what do you remember")) {
-      reply = `${p[1]} Here's what I remember about you:\n\n` +
+      reply =
+        `${p[1]} Here's what I remember:\n\n` +
         `• Preferences: ${mem.preferences.join("; ") || "none"}\n` +
         `• Dislikes: ${mem.dislikes.join("; ") || "none"}\n` +
         `• Facts: ${mem.facts.join("; ") || "none"}\n` +
@@ -220,17 +238,12 @@ export default function BotChatPage() {
     }
 
     else if (lower.includes("help")) {
-      reply = `${p[2]} I can move, dance, jump, react, remember things about you, and change scenes.`;
+      reply = `${p[2]} I can move, dance, jump, react, remember things, and change scenes automatically.`;
     }
 
     else if (lower.includes("dance")) {
       emitAvatarEvent({ type: "dance" });
       reply = `${p[3]} Dancing now! 💃🕺`;
-    }
-
-    else if (lower.includes("scene")) {
-      emitAvatarEvent({ type: "scene", value: "neon" });
-      reply = `${p[0]} Switching scenes!`;
     }
 
     else if (lower.includes("joke")) {
