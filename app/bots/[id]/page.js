@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import AvatarRenderer from '@/app/components/AvatarRenderer';
 import AvatarController from '@/app/components/AvatarController';
 import VoiceController from '@/app/components/VoiceController';
+import BotSpeaker from '@/app/components/BotSpeaker';
 
 export default function BotProfile() {
   const { id } = useParams();
@@ -14,12 +15,29 @@ export default function BotProfile() {
   // ⭐ Unified action state for 3D movement + camera control
   const [action, setAction] = useState("idle");
 
+  // ⭐ NEW: spoken text state
+  const [speakText, setSpeakText] = useState("");
+
   useEffect(() => {
     const saved = localStorage.getItem(`bot-${id}`);
     if (saved) {
       setBot(JSON.parse(saved));
     }
   }, [id]);
+
+  // ⭐ Whenever action changes, bot speaks
+  useEffect(() => {
+    if (!action) return;
+
+    if (action === "move-forward") setSpeakText("Moving closer.");
+    else if (action === "move-back") setSpeakText("Backing up.");
+    else if (action === "turn-left") setSpeakText("Turning left.");
+    else if (action === "turn-right") setSpeakText("Turning right.");
+    else if (action === "camera-face") setSpeakText("Showing my face.");
+    else if (action === "camera-full") setSpeakText("Showing full body.");
+    else if (action === "dance") setSpeakText("Activating dance mode.");
+    else setSpeakText("");
+  }, [action]);
 
   if (!bot) {
     return (
@@ -40,7 +58,7 @@ export default function BotProfile() {
         <AvatarRenderer
           mode="full"
           emotion="idle"
-          action={action}   // Pass action into renderer
+          action={action}
         />
       </div>
 
@@ -49,6 +67,9 @@ export default function BotProfile() {
 
       {/* ⭐ Voice Command Controller */}
       <VoiceController onCommand={(cmd) => setAction(cmd)} />
+
+      {/* ⭐ Bot Speech Output */}
+      <BotSpeaker text={speakText} />
 
       <div
         style={{
