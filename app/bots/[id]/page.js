@@ -17,6 +17,9 @@ export default function BotProfile() {
   const [gesture, setGesture] = useState("none");
   const [speakText, setSpeakText] = useState("");
 
+  // ⭐ NEW: short‑term memory (last 5 user commands)
+  const [memory, setMemory] = useState([]);
+
   const [status, setStatus] = useState({
     lastAction: "idle",
     lastEmotion: "idle",
@@ -43,6 +46,14 @@ export default function BotProfile() {
       : personality === "serious"
       ? pick + "."
       : pick;
+  };
+
+  // ⭐ Push to memory (max 5)
+  const remember = (msg) => {
+    setMemory((prev) => {
+      const updated = [msg, ...prev];
+      return updated.slice(0, 5);
+    });
   };
 
   useEffect(() => {
@@ -93,7 +104,7 @@ export default function BotProfile() {
     }));
   }, [action, bot]);
 
-  // ⭐ NEW: Gesture handler
+  // ⭐ Gesture handler
   const triggerGesture = (g) => {
     setGesture(g);
 
@@ -142,12 +153,16 @@ export default function BotProfile() {
     return () => clearInterval(loop);
   }, [bot]);
 
+  // ⭐ Text command
   const handleTextCmd = (cmd) => {
+    remember(cmd);
     setAction(cmd);
     setStatus((s) => ({ ...s, lastTextCmd: cmd }));
   };
 
+  // ⭐ Voice command
   const handleVoiceCmd = (cmd) => {
+    remember(cmd);
     setAction(cmd);
     setStatus((s) => ({ ...s, lastVoice: cmd }));
   };
@@ -187,16 +202,33 @@ export default function BotProfile() {
         <button onClick={() => triggerGesture("salute")} style={btn}>🫡 Salute</button>
       </div>
 
+      {/* ⭐ Memory Panel */}
+      <div
+        style={{
+          marginTop: "20px",
+          padding: "20px",
+          background: "#1f2937",
+          borderRadius: "12px",
+          width: "420px",
+          color: "#fff"
+        }}
+      >
+        <h3>Recent User Commands</h3>
+        {memory.length === 0 && <p>No memory yet.</p>}
+        {memory.map((m, i) => (
+          <p key={i}>• {m}</p>
+        ))}
+      </div>
+
       {/* Status Panel */}
       <div
         style={{
-          marginTop: "30px",
+          marginTop: "20px",
           padding: "20px",
           background: "#111827",
           borderRadius: "12px",
           width: "420px",
-          color: "#fff",
-          fontSize: "15px"
+          color: "#fff"
         }}
       >
         <h3>Live Bot Status</h3>
