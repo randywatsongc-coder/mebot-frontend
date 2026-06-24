@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import BotSpeaker from "@/app/components/BotSpeaker";
+import AvatarChatController from "@/app/components/AvatarChatController";
 
 export default function BotChatPage() {
   const { id } = useParams();
@@ -96,6 +97,14 @@ export default function BotChatPage() {
         color: "#fff",
       }}
     >
+      <AvatarChatController
+        message={
+          messages.length > 0 && messages[messages.length - 1].from === "user"
+            ? messages[messages.length - 1].text
+            : ""
+        }
+      />
+
       <h1>
         Chat with {bot.avatar} {bot.name}
       </h1>
@@ -122,17 +131,16 @@ export default function BotChatPage() {
               textAlign: m.from === "user" ? "right" : "left",
             }}
           >
-              <div
-                style={{
-                  display: "inline-block",
-                  padding: "10px 14px",
-                  background: m.from === "user" ? "#6366f1" : "#1e293b",
-                  borderRadius: "10px",
-                  maxWidth: "80%",
-                }}
-              >
-                {m.text}
-              </div>
+            <div
+              style={{
+                display: "inline-block",
+                padding: "10px 14px",
+                background: m.from === "user" ? "#6366f1" : "#1e293b",
+                borderRadius: "10px",
+                maxWidth: "80%",
+              }}
+            >
+              {m.text}
             </div>
           </div>
         ))}
