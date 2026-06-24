@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { sendAvatarEvent } from "@/app/events/avatarEvents";
 
 export default function VoiceController({ onCommand }) {
   const [listening, setListening] = useState(false);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
-    // Browser speech recognition
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -22,7 +22,6 @@ export default function VoiceController({ onCommand }) {
     recog.lang = "en-US";
 
     recog.onstart = () => setListening(true);
-
     recog.onend = () => setListening(false);
 
     recog.onerror = (e) => {
@@ -32,7 +31,28 @@ export default function VoiceController({ onCommand }) {
 
     recog.onresult = (event) => {
       const transcript = event.results[0][0].transcript.trim();
-      onCommand(transcript);
+
+      // Send raw text to chat
+      if (onCommand) onCommand(transcript);
+
+      const lower = transcript.toLowerCase();
+
+      // Avatar actions
+      if (lower.includes("dance")) sendAvatarEvent({ type: "dance" });
+      if (lower.includes("wave")) sendAvatarEvent({ type: "wave" });
+      if (lower.includes("jump")) sendAvatarEvent({ type: "jump" });
+
+      // Emotions
+      if (lower.includes("happy")) sendAvatarEvent({ type: "emotion", value: "happy" });
+      if (lower.includes("sad")) sendAvatarEvent({ type: "emotion", value: "sad" });
+      if (lower.includes("excited")) sendAvatarEvent({ type: "emotion", value: "excited" });
+      if (lower.includes("thinking")) sendAvatarEvent({ type: "emotion", value: "thinking" });
+
+      // Scene switching
+      if (lower.includes("scene")) {
+        const scene = lower.replace("scene", "").trim();
+        sendAvatarEvent({ type: "scene", value: scene });
+      }
     };
 
     recognitionRef.current = recog;
