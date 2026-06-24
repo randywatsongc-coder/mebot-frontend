@@ -15,10 +15,10 @@ export default function BotProfile() {
   // ⭐ Unified action state for 3D movement + camera control
   const [action, setAction] = useState("idle");
 
-  // ⭐ NEW: emotion state
+  // ⭐ Emotion state
   const [emotion, setEmotion] = useState("idle");
 
-  // ⭐ NEW: spoken text state
+  // ⭐ Spoken text state
   const [speakText, setSpeakText] = useState("");
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function BotProfile() {
     }
   }, [id]);
 
-  // ⭐ Whenever action changes, bot speaks + changes emotion
+  // ⭐ Automatic emotion + speech based on actions
   useEffect(() => {
     if (!action) return;
 
@@ -84,7 +84,7 @@ export default function BotProfile() {
       <div style={{ marginTop: "40px", marginBottom: "20px" }}>
         <AvatarRenderer
           mode="full"
-          emotion={emotion}   // ⭐ Emotion now passed into renderer
+          emotion={emotion}
           action={action}
         />
       </div>
@@ -97,6 +97,17 @@ export default function BotProfile() {
 
       {/* ⭐ Bot Speech Output */}
       <BotSpeaker text={speakText} />
+
+      {/* ⭐ NEW: Manual Emotion Controls */}
+      <div style={{ marginTop: "30px", marginBottom: "30px" }}>
+        <h3>Emotion Controls</h3>
+
+        <button onClick={() => setEmotion("idle")} style={btn}>😐 Idle</button>
+        <button onClick={() => setEmotion("happy")} style={btn}>😊 Happy</button>
+        <button onClick={() => setEmotion("thinking")} style={btn}>🤔 Thinking</button>
+        <button onClick={() => setEmotion("excited")} style={btn}>😎 Excited</button>
+        <button onClick={() => setEmotion("focused")} style={btn}>🎯 Focused</button>
+      </div>
 
       <div
         style={{
@@ -131,3 +142,15 @@ export default function BotProfile() {
     </main>
   );
 }
+
+// ⭐ Button style
+const btn = {
+  padding: "10px 16px",
+  marginRight: "10px",
+  background: "#1e293b",
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "16px"
+};
