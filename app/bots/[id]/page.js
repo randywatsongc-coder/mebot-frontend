@@ -15,6 +15,9 @@ export default function BotProfile() {
   // ⭐ Unified action state for 3D movement + camera control
   const [action, setAction] = useState("idle");
 
+  // ⭐ NEW: emotion state
+  const [emotion, setEmotion] = useState("idle");
+
   // ⭐ NEW: spoken text state
   const [speakText, setSpeakText] = useState("");
 
@@ -25,18 +28,42 @@ export default function BotProfile() {
     }
   }, [id]);
 
-  // ⭐ Whenever action changes, bot speaks
+  // ⭐ Whenever action changes, bot speaks + changes emotion
   useEffect(() => {
     if (!action) return;
 
-    if (action === "move-forward") setSpeakText("Moving closer.");
-    else if (action === "move-back") setSpeakText("Backing up.");
-    else if (action === "turn-left") setSpeakText("Turning left.");
-    else if (action === "turn-right") setSpeakText("Turning right.");
-    else if (action === "camera-face") setSpeakText("Showing my face.");
-    else if (action === "camera-full") setSpeakText("Showing full body.");
-    else if (action === "dance") setSpeakText("Activating dance mode.");
-    else setSpeakText("");
+    if (action === "move-forward") {
+      setSpeakText("Moving closer.");
+      setEmotion("focused");
+    }
+    else if (action === "move-back") {
+      setSpeakText("Backing up.");
+      setEmotion("idle");
+    }
+    else if (action === "turn-left") {
+      setSpeakText("Turning left.");
+      setEmotion("thinking");
+    }
+    else if (action === "turn-right") {
+      setSpeakText("Turning right.");
+      setEmotion("thinking");
+    }
+    else if (action === "camera-face") {
+      setSpeakText("Showing my face.");
+      setEmotion("happy");
+    }
+    else if (action === "camera-full") {
+      setSpeakText("Showing full body.");
+      setEmotion("idle");
+    }
+    else if (action === "dance") {
+      setSpeakText("Activating dance mode.");
+      setEmotion("excited");
+    }
+    else {
+      setEmotion("idle");
+      setSpeakText("");
+    }
   }, [action]);
 
   if (!bot) {
@@ -57,7 +84,7 @@ export default function BotProfile() {
       <div style={{ marginTop: "40px", marginBottom: "20px" }}>
         <AvatarRenderer
           mode="full"
-          emotion="idle"
+          emotion={emotion}   // ⭐ Emotion now passed into renderer
           action={action}
         />
       </div>
@@ -83,6 +110,7 @@ export default function BotProfile() {
         <h2>{bot.avatar} {bot.name}</h2>
         <p><strong>ID:</strong> {bot.id}</p>
         <p><strong>Personality:</strong> {bot.personality}</p>
+        <p><strong>Emotion:</strong> {emotion}</p>
 
         <button
           onClick={() => router.push(`/bots/${id}/chat`)}
