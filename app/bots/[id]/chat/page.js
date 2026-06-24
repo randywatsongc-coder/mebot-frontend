@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import BotSpeaker from "@/app/components/BotSpeaker";
 import AvatarChatController from "@/app/components/AvatarChatController";
 import VoiceController from "@/app/components/VoiceController";
@@ -15,6 +15,32 @@ export default function BotChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [memory, setMemory] = useState([]);
+
+  // ⭐ STEP 5 — IDLE TIMER
+  const idleTimer = useRef(null);
+
+  const startIdleLoop = () => {
+    clearTimeout(idleTimer.current);
+
+    idleTimer.current = setTimeout(() => {
+      const idleActions = ["idle-look", "idle-blink", "idle-shift"];
+      const pick = idleActions[Math.floor(Math.random() * idleActions.length)];
+
+      emitAvatarEvent({ type: "idle", value: pick });
+
+      startIdleLoop();
+    }, 8000 + Math.random() * 4000);
+  };
+
+  const resetIdle = () => {
+    clearTimeout(idleTimer.current);
+    startIdleLoop();
+  };
+
+  useEffect(() => {
+    startIdleLoop();
+    return () => clearTimeout(idleTimer.current);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem(`bot-${id}`);
@@ -81,6 +107,8 @@ export default function BotChatPage() {
   const handleVoiceCommand = (text) => {
     if (!text.trim()) return;
 
+    resetIdle();
+
     const userMsg = { from: "user", text };
     const botReply = generateBotReply(text);
 
@@ -90,6 +118,8 @@ export default function BotChatPage() {
 
   const sendMessage = () => {
     if (!input.trim()) return;
+
+    resetIdle();
 
     const userMsg = { from: "user", text: input };
     const botReply = generateBotReply(input);
@@ -101,6 +131,8 @@ export default function BotChatPage() {
 
   const generateBotReply = (msg) => {
     if (!bot) return { from: "bot", text: "..." };
+
+    resetIdle();
 
     const lower = msg.toLowerCase();
     let reply = "";
@@ -117,7 +149,7 @@ export default function BotChatPage() {
     const movement = detectMovement(msg);
     if (movement) emitAvatarEvent(movement);
 
-    // ⭐ STEP 4 — LIP‑SYNC START
+    // STEP 4 — LIP‑SYNC START
     emitAvatarEvent({ type: "speak-start" });
 
     // Personality emojis
@@ -156,7 +188,7 @@ export default function BotChatPage() {
     // Default
     else reply = `${p[1]} You said: "${msg}". Tell me more.`;
 
-    // ⭐ STEP 4 — LIP‑SYNC STOP
+    // STEP 4 — LIP‑SYNC STOP
     setTimeout(() => {
       emitAvatarEvent({ type: "speak-stop" });
     }, 400);
