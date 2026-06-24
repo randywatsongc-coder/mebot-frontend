@@ -1,57 +1,82 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 
-// Internal component so useFrame can run
-function RobotModel({ action }) {
-  const speed = 0.04;
+// Placeholder robot model until GEN‑6# is imported
+function RobotModel({ action, emotion, gesture }) {
+  const ref = useRef();
 
   useFrame((state) => {
-    // Forward / Backward
-    if (action === "move-forward") state.camera.position.z -= speed;
-    if (action === "move-back") state.camera.position.z += speed;
+    if (!ref.current) return;
 
-    // Turning
-    if (action === "turn-left") state.camera.rotation.y += 0.03;
-    if (action === "turn-right") state.camera.rotation.y -= 0.03;
+    // Basic idle breathing animation
+    ref.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.03;
 
-    // Camera presets
-    if (action === "camera-face") {
-      state.camera.position.set(0, 1.5, 1.2);
+    // Gestures
+    if (gesture === "wave") {
+      ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.3;
     }
-    if (action === "camera-full") {
-      state.camera.position.set(0, 1.5, 3);
+    if (gesture === "nod") {
+      ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 6) * 0.2;
     }
+    if (gesture === "thumbs-up") {
+      ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 4) * 0.2;
+    }
+
+    // Emotion color tint
+    const emoColors = {
+      idle: "#4cc9f0",
+      happy: "#4ef08a",
+      thinking: "#f0e14c",
+      excited: "#ff6b6b",
+      focused: "#6b9bff",
+      sad: "#6c6c6c"
+    };
+
+    ref.current.material.color.set(emoColors[emotion] || "#4cc9f0");
   });
 
   return (
-    <mesh>
+    <mesh ref={ref}>
       <boxGeometry args={[1, 2, 1]} />
       <meshStandardMaterial color="#4cc9f0" />
     </mesh>
   );
 }
 
-export default function AvatarRenderer({ mode = "full", emotion = "idle", action = "idle" }) {
+export default function AvatarRenderer({
+  mode = "full",
+  emotion = "idle",
+  action = "idle",
+  gesture = "none",
+  scene = "studio"
+}) {
+  // Scene backgrounds
+  const sceneColors = {
+    studio: "#0a0f24",
+    neon: "#1a0033",
+    room: "#1f1f1f",
+    dark: "#000000"
+  };
+
   return (
     <div
       style={{
         width: "100%",
         height: mode === "full" ? "500px" : "300px",
-        background: "#0a0f24",
+        background: sceneColors[scene] || "#0a0f24",
         borderRadius: "12px",
         overflow: "hidden",
         marginBottom: "20px"
       }}
     >
       <Canvas camera={{ position: [0, 1.5, 3] }}>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 5, 5]} intensity={1} />
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[5, 5, 5]} intensity={1.2} />
 
-        {/* GEN‑6# placeholder model */}
-        <RobotModel action={action} />
+        <RobotModel action={action} emotion={emotion} gesture={gesture} />
 
         <OrbitControls enableZoom={true} />
       </Canvas>
