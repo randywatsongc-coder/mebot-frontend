@@ -3,26 +3,27 @@
 import { useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { subscribeToAvatarEvents } from "@/app/events/avatarEvents";
 
 // Placeholder robot model until GEN‑6# is imported
-function RobotModel({ action, emotion, gesture }) {
-  const ref = useRef();
+function RobotModel({ action, emotion, gesture }, ref) {
+  const meshRef = useRef();
 
   useFrame((state) => {
-    if (!ref.current) return;
+    if (!meshRef.current) return;
 
-    // Basic idle breathing animation
-    ref.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.03;
+    // Idle breathing
+    meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.03;
 
     // Gestures
     if (gesture === "wave") {
-      ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.3;
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 10) * 0.3;
     }
     if (gesture === "nod") {
-      ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 6) * 0.2;
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 6) * 0.2;
     }
     if (gesture === "thumbs-up") {
-      ref.current.rotation.y = Math.sin(state.clock.elapsedTime * 4) * 0.2;
+      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 4) * 0.2;
     }
 
     // Emotion color tint
@@ -35,16 +36,33 @@ function RobotModel({ action, emotion, gesture }) {
       sad: "#6c6c6c"
     };
 
-    ref.current.material.color.set(emoColors[emotion] || "#4cc9f0");
+    meshRef.current.material.color.set(emoColors[emotion] || "#4cc9f0");
   });
 
+  // Expose animation functions to parent
+  if (ref) {
+    ref.current = {
+      playDance: () => {
+        meshRef.current.rotation.x = 0;
+        meshRef.current.rotation.y = 0;
+        meshRef.current.rotation.z = 0;
+      },
+      playWave: () => {},
+      playJump: () => {},
+      setEmotion: (emo) => {},
+      changeScene: (scene) => {}
+    };
+  }
+
   return (
-    <mesh ref={ref}>
+    <mesh ref={meshRef}>
       <boxGeometry args={[1, 2, 1]} />
       <meshStandardMaterial color="#4cc9f0" />
     </mesh>
   );
 }
+
+const ForwardRobot = React.forwardRef(RobotModel);
 
 export default function AvatarRenderer({
   mode = "full",
@@ -53,6 +71,8 @@ export default function AvatarRenderer({
   gesture = "none",
   scene = "studio"
 }) {
+  const avatarRef = useRef();
+
   // Scene backgrounds
   const sceneColors = {
     studio: "#0a0f24",
@@ -60,6 +80,21 @@ export default function AvatarRenderer({
     room: "#1f1f1f",
     dark: "#000000"
   };
+
+  // Listen for chat → avatar events
+  useEffect(() => {
+    const unsubscribe = subscribeToAvatarEvents((event) => {
+      if (!avatarRef.current) return;
+
+      if (event.type === "dance") avatarRef.current.playDance();
+      if (event.type === "wave") avatarRef.current.playWave();
+      if (event.type === "jump") avatarRef.current.playJump();
+      if (event.type === "emotion") avatarRef.current.setEmotion(event.value);
+      if (event.type === "scene") avatarRef.current.changeScene(event.value);
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <div
@@ -76,7 +111,12 @@ export default function AvatarRenderer({
         <ambientLight intensity={0.7} />
         <directionalLight position={[5, 5, 5]} intensity={1.2} />
 
-        <RobotModel action={action} emotion={emotion} gesture={gesture} />
+        <ForwardRobot
+          ref={avatarRef}
+          action={action}
+          emotion={emotion}
+          gesture={gesture}
+        />
 
         <OrbitControls enableZoom={true} />
       </Canvas>
