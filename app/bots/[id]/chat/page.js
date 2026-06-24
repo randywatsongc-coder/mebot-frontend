@@ -47,25 +47,33 @@ export default function BotChatPage() {
   const detectGesture = (text) => {
     const t = text.toLowerCase();
 
-    // Agreement → nod
-    if (["yes", "yeah", "yup", "true", "exactly", "right"].some((w) => t.includes(w))) {
+    if (["yes", "yeah", "yup", "true", "exactly", "right"].some((w) => t.includes(w)))
       return { type: "gesture", value: "nod" };
-    }
 
-    // Disagreement → shake
-    if (["no", "nah", "nope", "not really", "i disagree"].some((w) => t.includes(w))) {
+    if (["no", "nah", "nope", "not really", "i disagree"].some((w) => t.includes(w)))
       return { type: "gesture", value: "shake" };
-    }
 
-    // Greetings → wave
-    if (["hi", "hello", "hey", "yo"].some((w) => t.includes(w))) {
+    if (["hi", "hello", "hey", "yo"].some((w) => t.includes(w)))
       return { type: "wave" };
-    }
 
-    // Curiosity → lean
-    if (["why", "how", "explain", "tell me more", "what do you think"].some((w) => t.includes(w))) {
+    if (["why", "how", "explain", "tell me more", "what do you think"].some((w) => t.includes(w)))
       return { type: "gesture", value: "lean" };
-    }
+
+    return null;
+  };
+
+  // STEP 3 — AUTO‑MOVEMENT DETECTION
+  const detectMovement = (text) => {
+    const t = text.toLowerCase();
+
+    if (["wow", "no way", "what", "holy", "bro", "wtf"].some((w) => t.includes(w)))
+      return { type: "jump" };
+
+    if (["let’s go", "fire", "hype", "party", "turn up"].some((w) => t.includes(w)))
+      return { type: "dance" };
+
+    if (["what", "huh", "idk", "i don’t know", "confused"].some((w) => t.includes(w)))
+      return { type: "gesture", value: "look" };
 
     return null;
   };
@@ -97,13 +105,20 @@ export default function BotChatPage() {
     const lower = msg.toLowerCase();
     let reply = "";
 
-    // STEP 1 — AUTO‑EMOTION
+    // STEP 1 — EMOTION
     const detectedEmotion = detectEmotion(msg);
     emitAvatarEvent({ type: "emotion", value: detectedEmotion });
 
-    // STEP 2 — AUTO‑GESTURES
+    // STEP 2 — GESTURES
     const gesture = detectGesture(msg);
     if (gesture) emitAvatarEvent(gesture);
+
+    // STEP 3 — MOVEMENT
+    const movement = detectMovement(msg);
+    if (movement) emitAvatarEvent(movement);
+
+    // ⭐ STEP 4 — LIP‑SYNC START
+    emitAvatarEvent({ type: "speak-start" });
 
     // Personality emojis
     const personality = {
@@ -117,7 +132,7 @@ export default function BotChatPage() {
 
     // Commands
     if (lower.includes("help")) {
-      reply = `${p[2]} I can move, dance, change scenes, show emotions, and react to your messages.`;
+      reply = `${p[2]} I can move, dance, jump, react, change scenes, and show emotions.`;
     } else if (lower.includes("dance")) {
       emitAvatarEvent({ type: "dance" });
       reply = `${p[3]} Dancing now! 💃🕺`;
@@ -140,6 +155,11 @@ export default function BotChatPage() {
 
     // Default
     else reply = `${p[1]} You said: "${msg}". Tell me more.`;
+
+    // ⭐ STEP 4 — LIP‑SYNC STOP
+    setTimeout(() => {
+      emitAvatarEvent({ type: "speak-stop" });
+    }, 400);
 
     return { from: "bot", text: reply };
   };
@@ -222,7 +242,7 @@ export default function BotChatPage() {
             padding: "12px",
             width: "70%",
             borderRadius: "8px",
-            border: "1px solid #334155",
+            border: "1px solid "#334155",
             background: "#1e293b",
             color: "#fff",
             marginRight: "10px",
