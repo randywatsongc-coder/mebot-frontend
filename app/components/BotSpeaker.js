@@ -3,22 +3,35 @@
 import { useEffect, useRef } from "react";
 
 export default function BotSpeaker({ text }) {
-  const lastText = useRef("");
+  const utteranceRef = useRef(null);
 
   useEffect(() => {
-    if (!text || text === lastText.current) return;
+    if (!text) return;
 
-    lastText.current = text;
+    // Stop any previous speech
+    window.speechSynthesis.cancel();
 
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "en-US";
-    utter.pitch = 1;
-    utter.rate = 1;
-    utter.volume = 1;
+    utter.rate = 1.05;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
 
-    window.speechSynthesis.cancel();
+    utteranceRef.current = utter;
     window.speechSynthesis.speak(utter);
   }, [text]);
 
-  return null; // No UI needed — this is audio only
+  return (
+    <div
+      style={{
+        background: "#0f172a",
+        padding: "20px",
+        borderRadius: "12px",
+        marginBottom: "20px",
+        color: "#fff",
+      }}
+    >
+      <h3>Bot Speaker</h3>
+      <p style={{ opacity: 0.8 }}>{text || "Bot is silent..."}</p>
+    </div>
+  );
 }
