@@ -2,10 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Avata'use client';
-
-import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import AvatarRenderer from '@/app/components/AvatarRenderer';
 import AvatarController from '@/app/components/AvatarController';
 import VoiceController from '@/app/components/VoiceController';
@@ -25,7 +21,7 @@ export default function BotProfile() {
   // ⭐ Spoken text state
   const [speakText, setSpeakText] = useState("");
 
-  // ⭐ NEW: Status panel state
+  // ⭐ Status panel state
   const [status, setStatus] = useState({
     lastAction: "idle",
     lastEmotion: "idle",
@@ -33,6 +29,46 @@ export default function BotProfile() {
     lastTextCmd: "none",
     lastSpeech: "none"
   });
+
+  // ⭐ Personality line generator
+  const personalityLine = (emotion, personality) => {
+    const lines = {
+      idle: [
+        "Just hanging out.",
+        "Ready when you are.",
+        "I'm here if you need me."
+      ],
+      happy: [
+        "Feeling great!",
+        "Love the energy!",
+        "This is fun!"
+      ],
+      thinking: [
+        "Let me think...",
+        "Processing...",
+        "Analyzing the situation."
+      ],
+      excited: [
+        "Let's gooo!",
+        "I'm pumped!",
+        "This is awesome!"
+      ],
+      focused: [
+        "Locked in.",
+        "Staying sharp.",
+        "I'm on it."
+      ]
+    };
+
+    const pool = lines[emotion] || lines.idle;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+
+    return personality === "fun"
+      ? pick + " 😄"
+      : personality === "serious"
+      ? pick + "."
+      : pick;
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem(`bot-${id}`);
@@ -55,7 +91,7 @@ export default function BotProfile() {
 
   // ⭐ Automatic emotion + speech based on actions
   useEffect(() => {
-    if (!action) return;
+    if (!action || !bot) return;
 
     let speech = "";
     let emo = emotion;
@@ -93,16 +129,21 @@ export default function BotProfile() {
       speech = "";
     }
 
-    setSpeakText(speech);
+    // ⭐ Add personality flavor
+    const flavored = speech
+      ? speech + " " + personalityLine(emo, bot.personality)
+      : personalityLine(emo, bot.personality);
+
+    setSpeakText(flavored);
     setEmotion(emo);
 
     setStatus((s) => ({
       ...s,
       lastAction: action,
       lastEmotion: emo,
-      lastSpeech: speech || s.lastSpeech
+      lastSpeech: flavored
     }));
-  }, [action]);
+  }, [action, bot]);
 
   // ⭐ Capture text command source
   const handleTextCmd = (cmd) => {
@@ -148,7 +189,7 @@ export default function BotProfile() {
       {/* ⭐ Bot Speech Output */}
       <BotSpeaker text={speakText} />
 
-      {/* ⭐ NEW: Live Status Panel */}
+      {/* ⭐ Live Status Panel */}
       <div
         style={{
           marginTop: "30px",
@@ -167,142 +208,6 @@ export default function BotProfile() {
         <p><strong>Last Text Command:</strong> {status.lastTextCmd}</p>
         <p><strong>Last Spoken Output:</strong> {status.lastSpeech}</p>
       </div>
-
-      <div
-        style={{
-          marginTop: "40px",
-          padding: "30px",
-          background: "#0a0f24",
-          borderRadius: "12px",
-          width: "400px",
-        }}
-      >
-        <h2>{bot.avatar} {bot.name}</h2>
-        <p><strong>ID:</strong> {bot.id}</p>
-        <p><strong>Personality:</strong> {bot.personality}</p>
-        <p><strong>Emotion:</strong> {emotion}</p>
-
-        <button
-          onClick={() => router.push(`/bots/${id}/chat`)}
-          style={{
-            marginTop: "20px",
-            padding: "12px 24px",
-            background: "#6366f1",
-            color: "#fff",
-            borderRadius: "8px",
-            border: "none",
-            fontSize: "18px",
-            cursor: "pointer"
-          }}
-        >
-          Chat with {bot.name}
-        </button>
-      </div>
-    </main>
-  );
-}
-rRenderer from '@/app/components/AvatarRenderer';
-import AvatarController from '@/app/components/AvatarController';
-import VoiceController from '@/app/components/VoiceController';
-import BotSpeaker from '@/app/components/BotSpeaker';
-
-export default function BotProfile() {
-  const { id } = useParams();
-  const router = useRouter();
-  const [bot, setBot] = useState(null);
-
-  // ⭐ Unified action state for 3D movement + camera control
-  const [action, setAction] = useState("idle");
-
-  // ⭐ Emotion state
-  const [emotion, setEmotion] = useState("idle");
-
-  // ⭐ Spoken text state
-  const [speakText, setSpeakText] = useState("");
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`bot-${id}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setBot(parsed);
-
-      // ⭐ NEW: Auto‑introduction when bot loads
-      setSpeakText(
-        `Hello, I am ${parsed.name}. I am a ${parsed.personality} style MeBot.`
-      );
-      setEmotion("happy");
-    }
-  }, [id]);
-
-  // ⭐ Automatic emotion + speech based on actions
-  useEffect(() => {
-    if (!action) return;
-
-    if (action === "move-forward") {
-      setSpeakText("Moving closer.");
-      setEmotion("focused");
-    }
-    else if (action === "move-back") {
-      setSpeakText("Backing up.");
-      setEmotion("idle");
-    }
-    else if (action === "turn-left") {
-      setSpeakText("Turning left.");
-      setEmotion("thinking");
-    }
-    else if (action === "turn-right") {
-      setSpeakText("Turning right.");
-      setEmotion("thinking");
-    }
-    else if (action === "camera-face") {
-      setSpeakText("Showing my face.");
-      setEmotion("happy");
-    }
-    else if (action === "camera-full") {
-      setSpeakText("Showing full body.");
-      setEmotion("idle");
-    }
-    else if (action === "dance") {
-      setSpeakText("Activating dance mode.");
-      setEmotion("excited");
-    }
-    else {
-      setEmotion("idle");
-      setSpeakText("");
-    }
-  }, [action]);
-
-  if (!bot) {
-    return (
-      <main style={{ padding: "60px" }}>
-        <h1>Bot Not Found</h1>
-        <p>No bot exists with ID: {id}</p>
-      </main>
-    );
-  }
-
-  return (
-    <main style={{ padding: "60px" }}>
-      <h1>Bot Profile</h1>
-      <p>This is the public page for your MeBot.</p>
-
-      {/* ⭐ GEN‑6# Avatar Renderer */}
-      <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-        <AvatarRenderer
-          mode="full"
-          emotion={emotion}
-          action={action}
-        />
-      </div>
-
-      {/* ⭐ Text Command Controller */}
-      <AvatarController onChange={(cmd) => setAction(cmd)} />
-
-      {/* ⭐ Voice Command Controller */}
-      <VoiceController onCommand={(cmd) => setAction(cmd)} />
-
-      {/* ⭐ Bot Speech Output */}
-      <BotSpeaker text={speakText} />
 
       <div
         style={{
