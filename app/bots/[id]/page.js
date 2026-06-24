@@ -4,13 +4,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AvatarRenderer from '@/app/components/AvatarRenderer';
 import AvatarController from '@/app/components/AvatarController';
+import VoiceController from '@/app/components/VoiceController';
 
 export default function BotProfile() {
   const { id } = useParams();
   const router = useRouter();
   const [bot, setBot] = useState(null);
 
-  // ⭐ NEW: action state for controlling the 3D avatar
+  // ⭐ Unified action state for 3D movement + camera control
   const [action, setAction] = useState("idle");
 
   useEffect(() => {
@@ -39,12 +40,15 @@ export default function BotProfile() {
         <AvatarRenderer
           mode="full"
           emotion="idle"
-          action={action}   // ⭐ Pass action into renderer
+          action={action}   // Pass action into renderer
         />
       </div>
 
-      {/* ⭐ NEW: Avatar Command Controller */}
+      {/* ⭐ Text Command Controller */}
       <AvatarController onChange={(cmd) => setAction(cmd)} />
+
+      {/* ⭐ Voice Command Controller */}
+      <VoiceController onCommand={(cmd) => setAction(cmd)} />
 
       <div
         style={{
