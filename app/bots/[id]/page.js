@@ -129,7 +129,6 @@ export default function BotProfile() {
       speech = "";
     }
 
-    // ⭐ Add personality flavor
     const flavored = speech
       ? speech + " " + personalityLine(emo, bot.personality)
       : personalityLine(emo, bot.personality);
@@ -144,6 +143,29 @@ export default function BotProfile() {
       lastSpeech: flavored
     }));
   }, [action, bot]);
+
+  // ⭐ NEW: Idle loop (every 10–20 seconds)
+  useEffect(() => {
+    if (!bot) return;
+
+    const loop = setInterval(() => {
+      const idleEmotions = ["idle", "happy", "thinking"];
+      const emo = idleEmotions[Math.floor(Math.random() * idleEmotions.length)];
+
+      const line = personalityLine(emo, bot.personality);
+
+      setEmotion(emo);
+      setSpeakText(line);
+
+      setStatus((s) => ({
+        ...s,
+        lastEmotion: emo,
+        lastSpeech: line
+      }));
+    }, 10000 + Math.random() * 10000); // 10–20 seconds
+
+    return () => clearInterval(loop);
+  }, [bot]);
 
   // ⭐ Capture text command source
   const handleTextCmd = (cmd) => {
