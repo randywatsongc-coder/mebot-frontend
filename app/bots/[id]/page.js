@@ -24,7 +24,14 @@ export default function BotProfile() {
   useEffect(() => {
     const saved = localStorage.getItem(`bot-${id}`);
     if (saved) {
-      setBot(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setBot(parsed);
+
+      // ⭐ NEW: Auto‑introduction when bot loads
+      setSpeakText(
+        `Hello, I am ${parsed.name}. I am a ${parsed.personality} style MeBot.`
+      );
+      setEmotion("happy");
     }
   }, [id]);
 
@@ -98,17 +105,6 @@ export default function BotProfile() {
       {/* ⭐ Bot Speech Output */}
       <BotSpeaker text={speakText} />
 
-      {/* ⭐ NEW: Manual Emotion Controls */}
-      <div style={{ marginTop: "30px", marginBottom: "30px" }}>
-        <h3>Emotion Controls</h3>
-
-        <button onClick={() => setEmotion("idle")} style={btn}>😐 Idle</button>
-        <button onClick={() => setEmotion("happy")} style={btn}>😊 Happy</button>
-        <button onClick={() => setEmotion("thinking")} style={btn}>🤔 Thinking</button>
-        <button onClick={() => setEmotion("excited")} style={btn}>😎 Excited</button>
-        <button onClick={() => setEmotion("focused")} style={btn}>🎯 Focused</button>
-      </div>
-
       <div
         style={{
           marginTop: "40px",
@@ -142,15 +138,3 @@ export default function BotProfile() {
     </main>
   );
 }
-
-// ⭐ Button style
-const btn = {
-  padding: "10px 16px",
-  marginRight: "10px",
-  background: "#1e293b",
-  color: "#fff",
-  border: "none",
-  borderRadius: "8px",
-  cursor: "pointer",
-  fontSize: "16px"
-};
