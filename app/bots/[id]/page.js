@@ -12,52 +12,27 @@ export default function BotProfile() {
   const router = useRouter();
   const [bot, setBot] = useState(null);
 
-  // ⭐ Unified action state for 3D movement + camera control
   const [action, setAction] = useState("idle");
-
-  // ⭐ Emotion state
   const [emotion, setEmotion] = useState("idle");
-
-  // ⭐ Spoken text state
+  const [gesture, setGesture] = useState("none");
   const [speakText, setSpeakText] = useState("");
 
-  // ⭐ Status panel state
   const [status, setStatus] = useState({
     lastAction: "idle",
     lastEmotion: "idle",
+    lastGesture: "none",
     lastVoice: "none",
     lastTextCmd: "none",
     lastSpeech: "none"
   });
 
-  // ⭐ Personality line generator
   const personalityLine = (emotion, personality) => {
     const lines = {
-      idle: [
-        "Just hanging out.",
-        "Ready when you are.",
-        "I'm here if you need me."
-      ],
-      happy: [
-        "Feeling great!",
-        "Love the energy!",
-        "This is fun!"
-      ],
-      thinking: [
-        "Let me think...",
-        "Processing...",
-        "Analyzing the situation."
-      ],
-      excited: [
-        "Let's gooo!",
-        "I'm pumped!",
-        "This is awesome!"
-      ],
-      focused: [
-        "Locked in.",
-        "Staying sharp.",
-        "I'm on it."
-      ]
+      idle: ["Just hanging out.", "Ready when you are.", "I'm here."],
+      happy: ["Feeling great!", "Love the energy!", "This is fun!"],
+      thinking: ["Let me think...", "Processing...", "Analyzing..."],
+      excited: ["Let's go!", "I'm pumped!", "This is awesome!"],
+      focused: ["Locked in.", "Staying sharp.", "I'm on it."]
     };
 
     const pool = lines[emotion] || lines.idle;
@@ -76,7 +51,6 @@ export default function BotProfile() {
       const parsed = JSON.parse(saved);
       setBot(parsed);
 
-      // ⭐ Auto‑introduction
       const intro = `Hello, I am ${parsed.name}. I am a ${parsed.personality} style MeBot.`;
       setSpeakText(intro);
       setEmotion("happy");
@@ -89,45 +63,20 @@ export default function BotProfile() {
     }
   }, [id]);
 
-  // ⭐ Automatic emotion + speech based on actions
   useEffect(() => {
     if (!action || !bot) return;
 
     let speech = "";
     let emo = emotion;
 
-    if (action === "move-forward") {
-      speech = "Moving closer.";
-      emo = "focused";
-    }
-    else if (action === "move-back") {
-      speech = "Backing up.";
-      emo = "idle";
-    }
-    else if (action === "turn-left") {
-      speech = "Turning left.";
-      emo = "thinking";
-    }
-    else if (action === "turn-right") {
-      speech = "Turning right.";
-      emo = "thinking";
-    }
-    else if (action === "camera-face") {
-      speech = "Showing my face.";
-      emo = "happy";
-    }
-    else if (action === "camera-full") {
-      speech = "Showing full body.";
-      emo = "idle";
-    }
-    else if (action === "dance") {
-      speech = "Activating dance mode.";
-      emo = "excited";
-    }
-    else {
-      emo = "idle";
-      speech = "";
-    }
+    if (action === "move-forward") { speech = "Moving closer."; emo = "focused"; }
+    else if (action === "move-back") { speech = "Backing up."; emo = "idle"; }
+    else if (action === "turn-left") { speech = "Turning left."; emo = "thinking"; }
+    else if (action === "turn-right") { speech = "Turning right."; emo = "thinking"; }
+    else if (action === "camera-face") { speech = "Showing my face."; emo = "happy"; }
+    else if (action === "camera-full") { speech = "Showing full body."; emo = "idle"; }
+    else if (action === "dance") { speech = "Activating dance mode."; emo = "excited"; }
+    else { emo = "idle"; speech = ""; }
 
     const flavored = speech
       ? speech + " " + personalityLine(emo, bot.personality)
@@ -144,7 +93,33 @@ export default function BotProfile() {
     }));
   }, [action, bot]);
 
-  // ⭐ NEW: Idle loop (every 10–20 seconds)
+  // ⭐ NEW: Gesture handler
+  const triggerGesture = (g) => {
+    setGesture(g);
+
+    let emo = "happy";
+    let line = "";
+
+    if (g === "wave") line = "Waving hello!";
+    if (g === "nod") line = "Nodding.";
+    if (g === "point") line = "Pointing.";
+    if (g === "thumbs-up") line = "Thumbs up!";
+    if (g === "salute") line = "Saluting.";
+
+    const flavored = line + " " + personalityLine(emo, bot.personality);
+
+    setEmotion(emo);
+    setSpeakText(flavored);
+
+    setStatus((s) => ({
+      ...s,
+      lastGesture: g,
+      lastEmotion: emo,
+      lastSpeech: flavored
+    }));
+  };
+
+  // ⭐ Idle loop
   useEffect(() => {
     if (!bot) return;
 
@@ -162,18 +137,16 @@ export default function BotProfile() {
         lastEmotion: emo,
         lastSpeech: line
       }));
-    }, 10000 + Math.random() * 10000); // 10–20 seconds
+    }, 10000 + Math.random() * 10000);
 
     return () => clearInterval(loop);
   }, [bot]);
 
-  // ⭐ Capture text command source
   const handleTextCmd = (cmd) => {
     setAction(cmd);
     setStatus((s) => ({ ...s, lastTextCmd: cmd }));
   };
 
-  // ⭐ Capture voice command source
   const handleVoiceCmd = (cmd) => {
     setAction(cmd);
     setStatus((s) => ({ ...s, lastVoice: cmd }));
@@ -191,27 +164,30 @@ export default function BotProfile() {
   return (
     <main style={{ padding: "60px" }}>
       <h1>Bot Profile</h1>
-      <p>This is the public page for your MeBot.</p>
 
-      {/* ⭐ GEN‑6# Avatar Renderer */}
       <div style={{ marginTop: "40px", marginBottom: "20px" }}>
         <AvatarRenderer
           mode="full"
           emotion={emotion}
           action={action}
+          gesture={gesture}
         />
       </div>
 
-      {/* ⭐ Text Command Controller */}
       <AvatarController onChange={handleTextCmd} />
-
-      {/* ⭐ Voice Command Controller */}
       <VoiceController onCommand={handleVoiceCmd} />
-
-      {/* ⭐ Bot Speech Output */}
       <BotSpeaker text={speakText} />
 
-      {/* ⭐ Live Status Panel */}
+      {/* ⭐ Gesture Buttons */}
+      <div style={{ marginTop: "20px" }}>
+        <button onClick={() => triggerGesture("wave")} style={btn}>👋 Wave</button>
+        <button onClick={() => triggerGesture("nod")} style={btn}>👍 Nod</button>
+        <button onClick={() => triggerGesture("point")} style={btn}>👉 Point</button>
+        <button onClick={() => triggerGesture("thumbs-up")} style={btn}>👍 Thumbs Up</button>
+        <button onClick={() => triggerGesture("salute")} style={btn}>🫡 Salute</button>
+      </div>
+
+      {/* Status Panel */}
       <div
         style={{
           marginTop: "30px",
@@ -223,44 +199,25 @@ export default function BotProfile() {
           fontSize: "15px"
         }}
       >
-        <h3 style={{ marginBottom: "10px" }}>Live Bot Status</h3>
+        <h3>Live Bot Status</h3>
         <p><strong>Last Action:</strong> {status.lastAction}</p>
         <p><strong>Last Emotion:</strong> {status.lastEmotion}</p>
+        <p><strong>Last Gesture:</strong> {status.lastGesture}</p>
         <p><strong>Last Voice Command:</strong> {status.lastVoice}</p>
         <p><strong>Last Text Command:</strong> {status.lastTextCmd}</p>
         <p><strong>Last Spoken Output:</strong> {status.lastSpeech}</p>
       </div>
-
-      <div
-        style={{
-          marginTop: "40px",
-          padding: "30px",
-          background: "#0a0f24",
-          borderRadius: "12px",
-          width: "400px",
-        }}
-      >
-        <h2>{bot.avatar} {bot.name}</h2>
-        <p><strong>ID:</strong> {bot.id}</p>
-        <p><strong>Personality:</strong> {bot.personality}</p>
-        <p><strong>Emotion:</strong> {emotion}</p>
-
-        <button
-          onClick={() => router.push(`/bots/${id}/chat`)}
-          style={{
-            marginTop: "20px",
-            padding: "12px 24px",
-            background: "#6366f1",
-            color: "#fff",
-            borderRadius: "8px",
-            border: "none",
-            fontSize: "18px",
-            cursor: "pointer"
-          }}
-        >
-          Chat with {bot.name}
-        </button>
-      </div>
     </main>
   );
 }
+
+const btn = {
+  padding: "10px 16px",
+  marginRight: "10px",
+  background: "#1e293b",
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  fontSize: "16px"
+};
