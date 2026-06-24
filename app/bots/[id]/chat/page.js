@@ -14,7 +14,60 @@ export default function BotChatPage() {
   const [bot, setBot] = useState(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
-  const [memory, setMemory] = useState([]);
+
+  // ⭐ STEP 6 — MEMORY ENGINE
+  const [memory, setMemory] = useState({
+    facts: [],
+    preferences: [],
+    dislikes: [],
+    goals: [],
+    misc: [],
+  });
+
+  // Load bot + memory
+  useEffect(() => {
+    const saved = localStorage.getItem(`bot-${id}`);
+    if (saved) setBot(JSON.parse(saved));
+
+    const savedMemory = localStorage.getItem(`memory-${id}`);
+    if (savedMemory) setMemory(JSON.parse(savedMemory));
+  }, [id]);
+
+  const saveMemory = (updated) => {
+    setMemory(updated);
+    localStorage.setItem(`memory-${id}`, JSON.stringify(updated));
+  };
+
+  // ⭐ STEP 6 — MEMORY TAGGING
+  const analyzeMemory = (text) => {
+    const t = text.toLowerCase();
+    const updated = { ...memory };
+
+    if (t.includes("i like") || t.includes("my favorite")) {
+      updated.preferences.push(text);
+    }
+
+    if (t.includes("i hate") || t.includes("i don't like")) {
+      updated.dislikes.push(text);
+    }
+
+    if (t.includes("my goal") || t.includes("i want to")) {
+      updated.goals.push(text);
+    }
+
+    if (t.includes("i am") || t.includes("i live") || t.includes("i work")) {
+      updated.facts.push(text);
+    }
+
+    updated.misc.push(text);
+
+    // Keep memory clean
+    Object.keys(updated).forEach((key) => {
+      updated[key] = updated[key].slice(-20);
+    });
+
+    saveMemory(updated);
+  };
 
   // ⭐ STEP 5 — IDLE TIMER
   const idleTimer = useRef(null);
@@ -41,13 +94,6 @@ export default function BotChatPage() {
     startIdleLoop();
     return () => clearTimeout(idleTimer.current);
   }, []);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`bot-${id}`);
-    if (saved) {
-      setBot(JSON.parse(saved));
-    }
-  }, [id]);
 
   // STEP 1 — AUTO‑EMOTION DETECTION
   const detectEmotion = (text) => {
@@ -108,24 +154,24 @@ export default function BotChatPage() {
     if (!text.trim()) return;
 
     resetIdle();
+    analyzeMemory(text);
 
     const userMsg = { from: "user", text };
     const botReply = generateBotReply(text);
 
     setMessages((prev) => [...prev, userMsg, botReply]);
-    setMemory((prev) => [...prev, text]);
   };
 
   const sendMessage = () => {
     if (!input.trim()) return;
 
     resetIdle();
+    analyzeMemory(input);
 
     const userMsg = { from: "user", text: input };
     const botReply = generateBotReply(input);
 
     setMessages((prev) => [...prev, userMsg, botReply]);
-    setMemory((prev) => [...prev, input]);
     setInput("");
   };
 
@@ -162,19 +208,37 @@ export default function BotChatPage() {
 
     const p = personality[bot.personality] || ["🙂"];
 
-    // Commands
-    if (lower.includes("help")) {
-      reply = `${p[2]} I can move, dance, jump, react, change scenes, and show emotions.`;
-    } else if (lower.includes("dance")) {
+    // ⭐ STEP 6 — MEMORY‑AWARE RESPONSES
+    const mem = memory;
+
+    if (lower.includes("what do you remember")) {
+      reply = `${p[1]} Here's what I remember about you:\n\n` +
+        `• Preferences: ${mem.preferences.join("; ") || "none"}\n` +
+        `• Dislikes: ${mem.dislikes.join("; ") || "none"}\n` +
+        `• Facts: ${mem.facts.join("; ") || "none"}\n` +
+        `• Goals: ${mem.goals.join("; ") || "none"}`;
+    }
+
+    else if (lower.includes("help")) {
+      reply = `${p[2]} I can move, dance, jump, react, remember things about you, and change scenes.`;
+    }
+
+    else if (lower.includes("dance")) {
       emitAvatarEvent({ type: "dance" });
       reply = `${p[3]} Dancing now! 💃🕺`;
-    } else if (lower.includes("scene")) {
+    }
+
+    else if (lower.includes("scene")) {
       emitAvatarEvent({ type: "scene", value: "neon" });
       reply = `${p[0]} Switching scenes!`;
-    } else if (lower.includes("joke")) {
+    }
+
+    else if (lower.includes("joke")) {
       reply = `${p[1]} Why did the robot go to therapy? Too many bytes of emotional baggage.`;
-    } else if (lower.includes("remember")) {
-      reply = `${p[2]} You told me: "${memory.join(", ")}"`;
+    }
+
+    else if (lower.includes("remember")) {
+      reply = `${p[2]} I remember: "${mem.misc.slice(-5).join(", ")}"`;
     }
 
     // Emotion‑based replies
@@ -185,7 +249,6 @@ export default function BotChatPage() {
     else if (detectedEmotion === "excited") reply = `${p[0]} LET’S GO!`;
     else if (detectedEmotion === "worried") reply = `${p[3]} It’s okay. I’m here.`;
 
-    // Default
     else reply = `${p[1]} You said: "${msg}". Tell me more.`;
 
     // STEP 4 — LIP‑SYNC STOP
