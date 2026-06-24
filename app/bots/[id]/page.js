@@ -3,11 +3,15 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AvatarRenderer from '@/app/components/AvatarRenderer';
+import AvatarController from '@/app/components/AvatarController';
 
 export default function BotProfile() {
   const { id } = useParams();
   const router = useRouter();
   const [bot, setBot] = useState(null);
+
+  // ⭐ NEW: action state for controlling the 3D avatar
+  const [action, setAction] = useState("idle");
 
   useEffect(() => {
     const saved = localStorage.getItem(`bot-${id}`);
@@ -31,12 +35,20 @@ export default function BotProfile() {
       <p>This is the public page for your MeBot.</p>
 
       {/* ⭐ GEN‑6# Avatar Renderer */}
-      <div style={{ marginTop: "40px", marginBottom: "40px" }}>
-        <AvatarRenderer mode="full" emotion="idle" />
+      <div style={{ marginTop: "40px", marginBottom: "20px" }}>
+        <AvatarRenderer
+          mode="full"
+          emotion="idle"
+          action={action}   // ⭐ Pass action into renderer
+        />
       </div>
+
+      {/* ⭐ NEW: Avatar Command Controller */}
+      <AvatarController onChange={(cmd) => setAction(cmd)} />
 
       <div
         style={{
+          marginTop: "40px",
           padding: "30px",
           background: "#0a0f24",
           borderRadius: "12px",
