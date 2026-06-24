@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import BotSpeaker from "@/app/components/BotSpeaker";
 import AvatarChatController from "@/app/components/AvatarChatController";
+import VoiceController from "@/app/components/VoiceController";
 
 export default function BotChatPage() {
   const { id } = useParams();
@@ -20,6 +21,16 @@ export default function BotChatPage() {
       setBot(JSON.parse(saved));
     }
   }, [id]);
+
+  const handleVoiceCommand = (text) => {
+    if (!text.trim()) return;
+
+    const userMsg = { from: "user", text };
+    const botReply = generateBotReply(text);
+
+    setMessages((prev) => [...prev, userMsg, botReply]);
+    setMemory((prev) => [...prev, text]);
+  };
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -108,6 +119,8 @@ export default function BotChatPage() {
       <h1>
         Chat with {bot.avatar} {bot.name}
       </h1>
+
+      <VoiceController onCommand={handleVoiceCommand} />
 
       <div
         style={{
